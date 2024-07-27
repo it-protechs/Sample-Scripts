@@ -1,0 +1,30 @@
+# PowerShell Script to Install Hyper-V on Windows Server 2025
+
+# 2.1 Check for the Server's Compatibility with Hyper-V
+$compatible = Test-ComputerSystem | Select-Object -ExpandProperty HypervisorPresent
+if ($compatible -eq $true) {
+    Write-Host "Hyper-V is already installed or another hypervisor is running on this server."
+    exit
+}
+
+# 2.2 Install Hyper-V Role
+Write-Host "Installing the Hyper-V role..."
+Install-WindowsFeature -Name Hyper-V -IncludeManagementTools
+
+# 2.3 Confirm Hyper-V Installation
+Write-Host "Verifying Hyper-V installation..."
+$feature = Get-WindowsFeature -Name Hyper-V
+if ($feature.Installed) {
+    Write-Host "Hyper-V has been successfully installed."
+} else {
+    Write-Host "Hyper-V installation failed. Please check the error messages above."
+    exit
+}
+
+# 2.4 Configure Hyper-V Networking
+Write-Host "Configuring Hyper-V networking..."
+
+# Create a virtual switch for Hyper-V
+New-VMSwitch -Name "External Virtual Switch" -NetAdapterName (Get-NetAdapter | Where-Object { $_.Status -eq 'Up' }).Name -AllowManagementOS $true
+
+Write-Host "Hyper-V installation and configuration completed."
